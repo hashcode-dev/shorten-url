@@ -8,6 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+
 @RestController
 @RequestMapping("shortenUrl")
 @Getter
@@ -24,10 +28,23 @@ public class ShortenUrlController {
     }
 
     @GetMapping("/{shortUrl}")
-    public ResponseEntity<String> redirect(@PathVariable String shortUrl) {
+    public ResponseEntity<String> redirect(@PathVariable("shortUrl") String shortUrl) {
         ShortUrl url = getShortenUrlService().findByShortUrl(shortUrl);
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .header("Location", url.getOriginalUrl())
-                .build();
+        System.out.println("shortUrl: " + shortUrl);
+        // Check if the short URL exists
+        if (url == null || url.getOriginalUrl() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Short URL not found");
+        }
+        // Validate the original URL
+        try {
+            URI uri = new URL("https://" + url.getOriginalUrl()).toURI(); // Ensures the URL is valid
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", String.valueOf(uri))
+                    .build();
+        } catch (MalformedURLException | java.net.URISyntaxException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid original URL");
+        }
     }
 }
