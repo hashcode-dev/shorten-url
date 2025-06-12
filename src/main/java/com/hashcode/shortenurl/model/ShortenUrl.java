@@ -16,6 +16,7 @@ import java.util.List;
 public class ShortenUrl {
     @Id
     private String shortUrl;
+    private String alias;
     private String originalUrl;
     private LocalDateTime createdAt;
     private long clickCount;
