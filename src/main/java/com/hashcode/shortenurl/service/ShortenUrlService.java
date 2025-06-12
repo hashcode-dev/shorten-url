@@ -1,8 +1,10 @@
 package com.hashcode.shortenurl.service;
 
-import com.hashcode.shortenurl.model.ShortUrl;
+import com.hashcode.shortenurl.model.ShortenUrl;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface ShortenUrlService {
-    public ShortUrl shortenUrl(ShortUrl shortenUrl);
-    public ShortUrl findByShortUrl(String shortUrl);
+    public ShortenUrl createShortUrl(ShortenUrl shortenUrl);
+    public ShortenUrl redirect(String shortUrl, HttpServletRequest request);
+    public ShortenUrl getAnalytics(String shortUrl);
 }

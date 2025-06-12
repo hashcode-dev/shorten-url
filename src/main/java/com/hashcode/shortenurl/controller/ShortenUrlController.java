@@ -1,9 +1,11 @@
 package com.hashcode.shortenurl.controller;
 
-import com.hashcode.shortenurl.model.ShortUrl;
+import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.service.ShortenUrlService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,20 +19,28 @@ import java.net.URL;
 @Getter
 public class ShortenUrlController {
 
-    @Autowired
-    ShortenUrlService shortenUrlService;
+    private final ShortenUrlService shortenUrlService;
+    private final HttpServletRequest request;
 
+    private Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);
+
+    public ShortenUrlController(ShortenUrlService shortenUrlService, HttpServletRequest request) {
+        this.shortenUrlService = shortenUrlService;
+        this.request = request;
+    }
 
     @PostMapping("/shorten")
-    public ResponseEntity<ShortUrl> shortenUrl(@RequestBody ShortUrl originalUrl) {
-        ShortUrl shortUrl = getShortenUrlService().shortenUrl(originalUrl);
+    public ResponseEntity<ShortenUrl> shortenUrl(@RequestBody ShortenUrl originalUrl) {
+        getLogger().info("Short URL: " + originalUrl);
+        getLogger().info("Ip Address Of URL: " + getRequest().getRemoteAddr());
+        ShortenUrl shortUrl = getShortenUrlService().createShortUrl(originalUrl);
         return new ResponseEntity<>(shortUrl, HttpStatus.CREATED);
     }
 
     @GetMapping("/{shortUrl}")
     public ResponseEntity<String> redirect(@PathVariable("shortUrl") String shortUrl) {
-        ShortUrl url = getShortenUrlService().findByShortUrl(shortUrl);
-        System.out.println("shortUrl: " + shortUrl);
+        getLogger().info("Redirecting URL: " + shortUrl);
+        ShortenUrl url = getShortenUrlService().redirect(shortUrl, getRequest());
         // Check if the short URL exists
         if (url == null || url.getOriginalUrl() == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -38,7 +48,7 @@ public class ShortenUrlController {
         }
         // Validate the original URL
         try {
-            URI uri = new URL("https://" + url.getOriginalUrl()).toURI(); // Ensures the URL is valid
+            URI uri = new URL(url.getOriginalUrl()).toURI(); // Ensures the URL is valid
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", String.valueOf(uri))
                     .build();
@@ -46,5 +56,12 @@ public class ShortenUrlController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Invalid original URL");
         }
+    }
+
+    @GetMapping("/analytics/{shortUrl}")
+    public ResponseEntity<ShortenUrl> getAnalytics(@PathVariable String shortUrl) {
+        getLogger().info("Getting Analytics: " + shortUrl);
+        ShortenUrl url = getShortenUrlService().getAnalytics(shortUrl);
+        return new ResponseEntity<>(url, HttpStatus.OK);
     }
 }
