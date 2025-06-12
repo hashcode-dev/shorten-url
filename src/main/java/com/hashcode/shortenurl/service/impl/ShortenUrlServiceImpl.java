@@ -11,7 +11,10 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Random;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.hashcode.shortenurl.util.Utility.*;
 
 @Service
 @Getter
@@ -24,58 +27,52 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
         this.shortenUrlMongoRepository = shortenUrlMongoRepository;
     }
 
-    private static final String BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    private static final int SHORT_URL_LENGTH = 7;
-
     @Override
-    public ShortenUrl createShortUrl(ShortenUrl shortenUrl) {
-        String shortUrl = generateShortUrl();
+    public ShortenUrl createShortUrl(ShortenUrl shortenUrl, HttpServletRequest request) {
 
-        while (getShortenUrlMongoRepository().existsById(shortUrl)) {
-            shortUrl = generateShortUrl();
+        if (shortenUrl.getOriginalUrl() != null && !shortenUrl.getOriginalUrl().trim().isEmpty()) {
+            // Normalize URL by adding protocol if missing
+            String normalizedUrl = normalizeUrl(shortenUrl.getOriginalUrl());
+            String shortUrl = generateShortUrl();
+
+            while (getShortenUrlMongoRepository().existsById(shortUrl)) {
+                shortUrl = generateShortUrl();
+            }
+
+            ShortenUrl url = new ShortenUrl();
+            Map<String, Integer> map = new HashMap<>();
+            map.put(getClientIp(request), 0);
+            if(shortenUrl.getAlias() != null && !shortenUrl.getAlias().trim().isEmpty()) {
+                if(!getShortenUrlMongoRepository().existsById(shortenUrl.getAlias().trim())) {
+                    url.setShortUrl(shortenUrl.getAlias().trim());
+                    url.setAlias(shortenUrl.getAlias().trim());
+                } else {
+                    throw new IllegalArgumentException("Alias already exists");
+                }
+            } else {
+                url.setShortUrl(shortUrl);
+            }
+            url.setOriginalUrl(normalizedUrl);
+            url.setCreatedAt(LocalDateTime.now());
+            url.setClickCount(0);
+            url.setIpAddressMap(map);
+
+            return getShortenUrlMongoRepository().save(url);
+        } else {
+            throw new IllegalArgumentException("URL cannot be empty");
         }
-
-        ShortenUrl url = new ShortenUrl();
-        url.setShortUrl(shortUrl);
-        url.setOriginalUrl(shortenUrl.getOriginalUrl());
-        url.setCreatedAt(LocalDateTime.now());
-        url.setClickCount(0);
-        url.setIpAddressList(Collections.emptyList());
-
-        return getShortenUrlMongoRepository().save(url);
     }
 
     @Override
     public ShortenUrl redirect(String shortUrl, HttpServletRequest request) {
         ShortenUrl shortenUrl = getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException("Short URL not found"));
         shortenUrl.setClickCount(shortenUrl.getClickCount() + 1);
-        shortenUrl.getIpAddressList().add(getClientIp(request));
+        shortenUrl.getIpAddressMap().put(getClientIp(request), shortenUrl.getIpAddressMap().get(getClientIp(request)) + 1);
         return getShortenUrlMongoRepository().save(shortenUrl);
     }
 
     @Override
     public ShortenUrl getAnalytics(String shortUrl) {
         return getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException("Short URL not found"));
-    }
-
-    private String generateShortUrl() {
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < SHORT_URL_LENGTH; i++) {
-            sb.append(BASE62.charAt(random.nextInt(BASE62.length())));
-        }
-        return sb.toString();
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        getLogger().info("Client IP Address");
-        String remoteAddr = request.getRemoteAddr();
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            // X-Forwarded-For may contain a comma-separated list; take the first IP
-            remoteAddr = xForwardedFor.split(",")[0].trim();
-        }
-        return remoteAddr;
     }
 }

@@ -30,10 +30,10 @@ public class ShortenUrlController {
     }
 
     @PostMapping("/shorten")
-    public ResponseEntity<ShortenUrl> shortenUrl(@RequestBody ShortenUrl originalUrl) {
-        getLogger().info("Short URL: " + originalUrl);
+    public ResponseEntity<ShortenUrl> shortenUrl(@RequestBody ShortenUrl shortenUrl) {
+        getLogger().info("Short URL: " + shortenUrl.getOriginalUrl());
         getLogger().info("Ip Address Of URL: " + getRequest().getRemoteAddr());
-        ShortenUrl shortUrl = getShortenUrlService().createShortUrl(originalUrl);
+        ShortenUrl shortUrl = getShortenUrlService().createShortUrl(shortenUrl, getRequest());
         return new ResponseEntity<>(shortUrl, HttpStatus.CREATED);
     }
 

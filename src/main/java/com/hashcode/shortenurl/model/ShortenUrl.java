@@ -7,7 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -20,5 +20,5 @@ public class ShortenUrl {
     private String originalUrl;
     private LocalDateTime createdAt;
     private long clickCount;
-    private List<String> ipAddressList;
+    private Map<String, Integer> ipAddressMap;
 }
