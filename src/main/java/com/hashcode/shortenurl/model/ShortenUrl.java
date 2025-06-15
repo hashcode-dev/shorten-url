@@ -20,5 +20,6 @@ public class ShortenUrl {
     private String originalUrl;
     private LocalDateTime createdAt;
     private long clickCount;
+    private boolean reportMalicious;
     private Map<String, Integer> ipAddressMap;
 }

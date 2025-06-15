@@ -64,4 +64,11 @@ public class ShortenUrlController {
         ShortenUrl url = getShortenUrlService().getAnalytics(shortUrl);
         return new ResponseEntity<>(url, HttpStatus.OK);
     }
+
+    @GetMapping("/reportMalicious/{shortUrl}")
+    public ResponseEntity<ShortenUrl> reportMalicious(@PathVariable String shortUrl) {
+        getLogger().info("Getting Analytics: " + shortUrl);
+        ShortenUrl url = getShortenUrlService().reportMalicious(shortUrl);
+        return new ResponseEntity<>(url, HttpStatus.OK);
+    }
 }

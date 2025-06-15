@@ -74,4 +74,10 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
     public ShortenUrl getAnalytics(String shortUrl) {
         return getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException("Short URL not found"));
     }
+
+    @Override
+    public ShortenUrl reportMalicious(String shortUrl) {
+        ShortenUrl shortenUrl = getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException("Short URL not found"));
+        return getShortenUrlMongoRepository().save(shortenUrl);
+    }
 }
