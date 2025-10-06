@@ -31,15 +31,15 @@ public class ShortenUrlController {
 
     @PostMapping("/shorten")
     public ResponseEntity<ShortenUrl> shortenUrl(@RequestBody ShortenUrl shortenUrl) {
-        getLogger().info("Short URL: " + shortenUrl.getOriginalUrl());
-        getLogger().info("Ip Address Of URL: " + getRequest().getRemoteAddr());
+        getLogger().info("Short URL: [{}]", shortenUrl.getOriginalUrl());
+        getLogger().info("Ip Address Of URL: [{}]", getRequest().getRemoteAddr());
         ShortenUrl shortUrl = getShortenUrlService().createShortUrl(shortenUrl, getRequest());
         return new ResponseEntity<>(shortUrl, HttpStatus.CREATED);
     }
 
     @GetMapping("/{shortUrl}")
     public ResponseEntity<String> redirect(@PathVariable("shortUrl") String shortUrl) {
-        getLogger().info("Redirecting URL: " + shortUrl);
+        getLogger().info("Redirecting URL: [{}]", shortUrl);
         ShortenUrl url = getShortenUrlService().redirect(shortUrl, getRequest());
         // Check if the short URL exists
         if (url == null || url.getOriginalUrl() == null) {
@@ -60,14 +60,14 @@ public class ShortenUrlController {
 
     @GetMapping("/analytics/{shortUrl}")
     public ResponseEntity<ShortenUrl> getAnalytics(@PathVariable String shortUrl) {
-        getLogger().info("Getting Analytics: " + shortUrl);
+        getLogger().info("Getting Analytics: [{}]", shortUrl);
         ShortenUrl url = getShortenUrlService().getAnalytics(shortUrl);
         return new ResponseEntity<>(url, HttpStatus.OK);
     }
 
     @GetMapping("/reportMalicious/{shortUrl}")
     public ResponseEntity<ShortenUrl> reportMalicious(@PathVariable String shortUrl) {
-        getLogger().info("Getting Analytics: " + shortUrl);
+        getLogger().info("Reporting Malicious: [{}]", shortUrl);
         ShortenUrl url = getShortenUrlService().reportMalicious(shortUrl);
         return new ResponseEntity<>(url, HttpStatus.OK);
     }
