@@ -15,7 +15,6 @@ import java.net.URI;
 import java.net.URL;
 
 @RestController
-@RequestMapping("shortenUrl")
 @Getter
 public class ShortenUrlController {
 
