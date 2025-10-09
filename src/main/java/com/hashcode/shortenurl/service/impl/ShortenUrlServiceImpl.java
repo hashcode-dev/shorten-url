@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.hashcode.shortenurl.util.Utility.*;
@@ -79,5 +80,10 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
     public ShortenUrl reportMalicious(String shortUrl) {
         ShortenUrl shortenUrl = getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException("Short URL not found"));
         return getShortenUrlMongoRepository().save(shortenUrl);
+    }
+
+    @Override
+    public List<ShortenUrl> getAllShortUrls() {
+        return getShortenUrlMongoRepository().findAll();
     }
 }

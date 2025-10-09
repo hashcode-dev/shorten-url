@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.List;
 
 @RestController
 @Getter
@@ -69,5 +70,12 @@ public class ShortenUrlController {
         getLogger().info("Reporting Malicious: [{}]", shortUrl);
         ShortenUrl url = getShortenUrlService().reportMalicious(shortUrl);
         return new ResponseEntity<>(url, HttpStatus.OK);
+    }
+
+    @GetMapping("/getAllShortUrls")
+    public ResponseEntity<List<ShortenUrl>> getAllShortUrls() {
+        getLogger().info("Getting all short url");
+        List<ShortenUrl> shortenUrlList = getShortenUrlService().getAllShortUrls();
+        return new ResponseEntity<>(shortenUrlList, HttpStatus.OK);
     }
 }
