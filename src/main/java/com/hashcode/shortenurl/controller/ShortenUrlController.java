@@ -17,6 +17,7 @@ import java.util.List;
 
 @RestController
 @Getter
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ShortenUrlController {
 
     private final ShortenUrlService shortenUrlService;
