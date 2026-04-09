@@ -1,5 +1,6 @@
 package com.hashcode.shortenurl.service.impl;
 
+import com.hashcode.shortenurl.model.DeviceInfo;
 import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.repository.ShortenUrlMongoRepository;
 import com.hashcode.shortenurl.service.ShortenUrlService;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +70,14 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
         ShortenUrl shortenUrl = getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException("Short URL not found"));
         shortenUrl.setClickCount(shortenUrl.getClickCount() + 1);
         shortenUrl.getIpAddressMap().put(getClientIp(request), shortenUrl.getIpAddressMap().get(getClientIp(request)) + 1);
+
+        // Capture device type and OS type from User-Agent
+        DeviceInfo deviceInfo = extractDeviceInfo(request);
+        if (shortenUrl.getDeviceInfoList() == null) {
+            shortenUrl.setDeviceInfoList(new ArrayList<>());
+        }
+        shortenUrl.getDeviceInfoList().add(deviceInfo);
+
         return getShortenUrlMongoRepository().save(shortenUrl);
     }
 
