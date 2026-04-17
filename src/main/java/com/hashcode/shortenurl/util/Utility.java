@@ -62,6 +62,10 @@ public class Utility {
     }
 
     public static DeviceInfo extractDeviceInfo(HttpServletRequest request) {
+        return extractDeviceInfo(request, null, null);
+    }
+
+    public static DeviceInfo extractDeviceInfo(HttpServletRequest request, String country, String countryCode) {
         String userAgent = request.getHeader("User-Agent");
         String deviceType = "Unknown";
         String osType = "Unknown";
@@ -75,6 +79,8 @@ public class Utility {
         deviceInfo.setDeviceType(deviceType);
         deviceInfo.setOsType(osType);
         deviceInfo.setIpAddress(getClientIp(request));
+        deviceInfo.setCountry(country != null ? country : "Unknown");
+        deviceInfo.setCountryCode(countryCode != null ? countryCode : "Unknown");
         deviceInfo.setAccessedAt(LocalDateTime.now());
         return deviceInfo;
     }

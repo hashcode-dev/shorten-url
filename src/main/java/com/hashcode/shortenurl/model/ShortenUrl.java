@@ -23,5 +23,6 @@ public class ShortenUrl {
     private long clickCount;
     private boolean reportMalicious;
     private Map<String, Integer> ipAddressMap;
+    private Map<String, Integer> countryClickMap;
     private List<DeviceInfo> deviceInfoList;
 }

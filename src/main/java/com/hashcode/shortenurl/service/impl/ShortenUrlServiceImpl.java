@@ -3,6 +3,7 @@ package com.hashcode.shortenurl.service.impl;
 import com.hashcode.shortenurl.model.DeviceInfo;
 import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.repository.ShortenUrlMongoRepository;
+import com.hashcode.shortenurl.service.GeoIpService;
 import com.hashcode.shortenurl.service.ShortenUrlService;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -23,10 +24,12 @@ import static com.hashcode.shortenurl.util.Utility.*;
 public class ShortenUrlServiceImpl implements ShortenUrlService {
 
     final ShortenUrlMongoRepository shortenUrlMongoRepository;
+    final GeoIpService geoIpService;
     private Logger logger = LoggerFactory.getLogger(ShortenUrlServiceImpl.class);
 
-    public ShortenUrlServiceImpl(ShortenUrlMongoRepository shortenUrlMongoRepository) {
+    public ShortenUrlServiceImpl(ShortenUrlMongoRepository shortenUrlMongoRepository, GeoIpService geoIpService) {
         this.shortenUrlMongoRepository = shortenUrlMongoRepository;
+        this.geoIpService = geoIpService;
     }
 
     @Override
@@ -69,10 +72,22 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
     public ShortenUrl redirect(String shortUrl, HttpServletRequest request) {
         ShortenUrl shortenUrl = getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException("Short URL not found"));
         shortenUrl.setClickCount(shortenUrl.getClickCount() + 1);
-        shortenUrl.getIpAddressMap().put(getClientIp(request), shortenUrl.getIpAddressMap().get(getClientIp(request)) + 1);
 
-        // Capture device type and OS type from User-Agent
-        DeviceInfo deviceInfo = extractDeviceInfo(request);
+        String clientIp = getClientIp(request);
+        if (shortenUrl.getIpAddressMap() == null) {
+            shortenUrl.setIpAddressMap(new HashMap<>());
+        }
+        shortenUrl.getIpAddressMap().merge(clientIp, 1, Integer::sum);
+
+        // Resolve country of origin for the click (graceful fallback to "Unknown")
+        GeoIpService.GeoLocation geo = getGeoIpService().lookupCountry(clientIp);
+        if (shortenUrl.getCountryClickMap() == null) {
+            shortenUrl.setCountryClickMap(new HashMap<>());
+        }
+        shortenUrl.getCountryClickMap().merge(geo.getCountry(), 1, Integer::sum);
+
+        // Capture device type, OS type and country from the incoming request
+        DeviceInfo deviceInfo = extractDeviceInfo(request, geo.getCountry(), geo.getCountryCode());
         if (shortenUrl.getDeviceInfoList() == null) {
             shortenUrl.setDeviceInfoList(new ArrayList<>());
         }
@@ -84,6 +99,13 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
     @Override
     public ShortenUrl getAnalytics(String shortUrl) {
         return getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException("Short URL not found"));
+    }
+
+    @Override
+    public Map<String, Integer> getCountryAnalytics(String shortUrl) {
+        ShortenUrl url = getShortenUrlMongoRepository().findById(shortUrl)
+                .orElseThrow(() -> new RuntimeException("Short URL not found"));
+        return url.getCountryClickMap() != null ? url.getCountryClickMap() : new HashMap<>();
     }
 
     @Override

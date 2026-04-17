@@ -15,6 +15,8 @@ public class DeviceInfo {
     private String deviceType;
     private String osType;
     private String ipAddress;
+    private String country;
+    private String countryCode;
     private LocalDateTime accessedAt;
 }
 
