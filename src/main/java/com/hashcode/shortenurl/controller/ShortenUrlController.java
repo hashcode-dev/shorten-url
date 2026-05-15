@@ -59,6 +59,24 @@ public class ShortenUrlController {
         }
     }
 
+    @GetMapping("/copy/{shortUrl}")
+    public ResponseEntity<String> copyShortUrl(@PathVariable String shortUrl) {
+        getLogger().info("Copying URL: [{}]", shortUrl);
+        return ResponseEntity.ok("http://localhost:8080/" + shortUrl);
+    }
+
+    @GetMapping("/share/{shortUrl}")
+    public ResponseEntity<String> shareUrl(@PathVariable String shortUrl) {
+        getLogger().info("Sharing URL: [{}]", shortUrl);
+        return ResponseEntity.ok("http://localhost:8080/" + shortUrl);
+    }
+
+    @GetMapping("/qr/{shortUrl}")
+    public ResponseEntity<String> generateQr(@PathVariable String shortUrl) {
+        getLogger().info("Generating QR: [{}]", shortUrl);
+        return ResponseEntity.ok("QR Generated For: " + shortUrl);
+    }
+
     @GetMapping("/analytics/{shortUrl}")
     public ResponseEntity<ShortenUrl> getAnalytics(@PathVariable String shortUrl) {
         getLogger().info("Getting Analytics: [{}]", shortUrl);
