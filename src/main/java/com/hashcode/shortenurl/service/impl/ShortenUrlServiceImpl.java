@@ -2,6 +2,7 @@ package com.hashcode.shortenurl.service.impl;
 
 import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.repository.ShortenUrlMongoRepository;
+import com.hashcode.shortenurl.service.ShortenUrlService;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
