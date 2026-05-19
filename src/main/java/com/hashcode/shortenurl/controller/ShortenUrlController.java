@@ -38,7 +38,7 @@ public class ShortenUrlController {
         return new ResponseEntity<>(shortUrl, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{shortUrl}")
+    @GetMapping("/r/{shortUrl}")
     public ResponseEntity<String> redirect(@PathVariable("shortUrl") String shortUrl) {
         getLogger().info("Redirecting URL: [{}]", shortUrl);
         ShortenUrl url = getShortenUrlService().redirect(shortUrl, getRequest());
@@ -47,9 +47,9 @@ public class ShortenUrlController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Short URL not found");
         }
-        // Validate the original URL
+
         try {
-            URI uri = new URL(url.getOriginalUrl()).toURI(); // Ensures the URL is valid
+            URI uri = new URL(url.getOriginalUrl()).toURI();
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", String.valueOf(uri))
                     .build();
@@ -62,13 +62,13 @@ public class ShortenUrlController {
     @GetMapping("/copy/{shortUrl}")
     public ResponseEntity<String> copyShortUrl(@PathVariable String shortUrl) {
         getLogger().info("Copying URL: [{}]", shortUrl);
-        return ResponseEntity.ok("http://localhost:8080/" + shortUrl);
+        return ResponseEntity.ok("http://localhost:8080/r/" + shortUrl);
     }
 
     @GetMapping("/share/{shortUrl}")
     public ResponseEntity<String> shareUrl(@PathVariable String shortUrl) {
         getLogger().info("Sharing URL: [{}]", shortUrl);
-        return ResponseEntity.ok("http://localhost:8080/" + shortUrl);
+        return ResponseEntity.ok("http://localhost:8080/r/" + shortUrl);
     }
 
     @GetMapping("/qr/{shortUrl}")

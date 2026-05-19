@@ -1,16 +1,16 @@
 package com.hashcode.shortenurl.repository;
 
 import com.hashcode.shortenurl.model.ShortenUrl;
-import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 public interface ShortenUrlMongoRepository extends MongoRepository<ShortenUrl, String> {
 
-    long countByStatus(String status);
+    long countByActiveTrue();
 
-    @Aggregation(pipeline = {
-            "{ $group: { _id: null, total: { $sum: \"$clicks\" } } }"
-            "{ $project: { _id: 0, total: 1 } }"
-    })
-    long getTotalClicks();
+    List<ShortenUrl> findByLastClickedAtAfter(LocalDateTime time);
+
+    List<ShortenUrl> findTop5ByOrderByClickCountDesc();
 }

@@ -18,8 +18,12 @@ public class ShortenUrl {
     private String shortUrl;
     private String alias;
     private String originalUrl;
+    private String country;
+    private String device;
     private LocalDateTime createdAt;
     private long clickCount;
+    private LocalDateTime lastClickedAt;
+    private boolean active;
     private boolean reportMalicious;
     private Map<String, Integer> ipAddressMap;
 }

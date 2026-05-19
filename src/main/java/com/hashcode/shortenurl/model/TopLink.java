@@ -1,0 +1,15 @@
+package com.hashcode.shortenurl.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TopLink {
+        private String shortUrl;
+        private String originalUrl;
+        private long clicks;
+        private String status;
+}
