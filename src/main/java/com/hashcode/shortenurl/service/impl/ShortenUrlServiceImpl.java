@@ -86,7 +86,6 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
                 .findById(shortUrl)
                 .orElseThrow(() -> new RuntimeException("Short URL not found"));
 
-        // increase clicks
         shortenUrl.setClickCount(shortenUrl.getClickCount() + 1);
 
         // set active
