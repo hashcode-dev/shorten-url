@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -26,4 +27,6 @@ public class ShortenUrl {
     private boolean active;
     private boolean reportMalicious;
     private Map<String, Integer> ipAddressMap;
+    private Map<String, Integer> countryClickMap;
+    private List<DeviceInfo> deviceInfoList;
 }

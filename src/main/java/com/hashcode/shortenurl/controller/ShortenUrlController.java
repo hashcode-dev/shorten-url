@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Getter
@@ -82,6 +83,13 @@ public class ShortenUrlController {
         getLogger().info("Getting Analytics: [{}]", shortUrl);
         ShortenUrl url = getShortenUrlService().getAnalytics(shortUrl);
         return new ResponseEntity<>(url, HttpStatus.OK);
+    }
+
+    @GetMapping("/analytics/{shortUrl}/countries")
+    public ResponseEntity<Map<String, Integer>> getCountryAnalytics(@PathVariable String shortUrl) {
+        getLogger().info("Getting Country Analytics: [{}]", shortUrl);
+        Map<String, Integer> countryMap = getShortenUrlService().getCountryAnalytics(shortUrl);
+        return new ResponseEntity<>(countryMap, HttpStatus.OK);
     }
 
     @GetMapping("/reportMalicious/{shortUrl}")
