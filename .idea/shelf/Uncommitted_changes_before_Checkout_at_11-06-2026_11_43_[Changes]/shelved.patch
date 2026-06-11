@@ -1,0 +1,524 @@
+Index: src/main/java/com/hashcode/shortenurl/repository/ShortenUrlMongoRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.hashcode.shortenurl.repository;\r\n\r\nimport com.hashcode.shortenurl.model.ShortenUrl;\r\nimport org.springframework.data.mongodb.repository.MongoRepository;\r\n\r\nimport java.time.LocalDateTime;\r\nimport java.util.List;\r\n\r\npublic interface ShortenUrlMongoRepository extends MongoRepository<ShortenUrl, String> {\r\n\r\n    long countByActiveTrue();\r\n\r\n    List<ShortenUrl> findByLastClickedAtAfter(LocalDateTime time);\r\n\r\n    List<ShortenUrl> findTop5ByOrderByClickCountDesc();\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/repository/ShortenUrlMongoRepository.java b/src/main/java/com/hashcode/shortenurl/repository/ShortenUrlMongoRepository.java
+--- a/src/main/java/com/hashcode/shortenurl/repository/ShortenUrlMongoRepository.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/src/main/java/com/hashcode/shortenurl/repository/ShortenUrlMongoRepository.java	(date 1780652147167)
+@@ -6,6 +6,7 @@
+ import java.time.LocalDateTime;
+ import java.util.List;
+ 
++
+ public interface ShortenUrlMongoRepository extends MongoRepository<ShortenUrl, String> {
+ 
+     long countByActiveTrue();
+@@ -13,4 +14,5 @@
+     List<ShortenUrl> findByLastClickedAtAfter(LocalDateTime time);
+ 
+     List<ShortenUrl> findTop5ByOrderByClickCountDesc();
++
+ }
+\ No newline at end of file
+Index: src/main/java/com/hashcode/shortenurl/model/ShortenUrl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.hashcode.shortenurl.model;\r\n\r\nimport lombok.Getter;\r\nimport lombok.NoArgsConstructor;\r\nimport lombok.Setter;\r\nimport org.springframework.data.annotation.Id;\r\nimport org.springframework.data.mongodb.core.mapping.Document;\r\n\r\nimport java.time.LocalDateTime;\r\nimport java.util.List;\r\nimport java.util.Map;\r\n\r\n@Getter\r\n@Setter\r\n@Document(\"short_url\")\r\n@NoArgsConstructor\r\npublic class ShortenUrl {\r\n    @Id\r\n    private String shortUrl;\r\n    private String alias;\r\n    private String originalUrl;\r\n    private String country;\r\n    private String device;\r\n    private LocalDateTime createdAt;\r\n    private long clickCount;\r\n    private LocalDateTime lastClickedAt;\r\n    private boolean active;\r\n    private boolean reportMalicious;\r\n    private Map<String, Integer> ipAddressMap;\r\n    private Map<String, Integer> countryClickMap;\r\n    private List<DeviceInfo> deviceInfoList;\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/model/ShortenUrl.java b/src/main/java/com/hashcode/shortenurl/model/ShortenUrl.java
+--- a/src/main/java/com/hashcode/shortenurl/model/ShortenUrl.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/src/main/java/com/hashcode/shortenurl/model/ShortenUrl.java	(date 1780652147190)
+@@ -19,8 +19,6 @@
+     private String shortUrl;
+     private String alias;
+     private String originalUrl;
+-    private String country;
+-    private String device;
+     private LocalDateTime createdAt;
+     private long clickCount;
+     private LocalDateTime lastClickedAt;
+@@ -29,4 +27,5 @@
+     private Map<String, Integer> ipAddressMap;
+     private Map<String, Integer> countryClickMap;
+     private List<DeviceInfo> deviceInfoList;
++
+ }
+Index: src/main/java/com/hashcode/shortenurl/controller/ShortenUrlController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.hashcode.shortenurl.controller;\r\n\r\nimport com.hashcode.shortenurl.model.ShortenUrl;\r\nimport com.hashcode.shortenurl.service.ShortenUrlService;\r\nimport jakarta.servlet.http.HttpServletRequest;\r\nimport lombok.Getter;\r\nimport org.slf4j.Logger;\r\nimport org.slf4j.LoggerFactory;\r\nimport org.springframework.http.HttpStatus;\r\nimport org.springframework.http.ResponseEntity;\r\nimport org.springframework.web.bind.annotation.*;\r\n\r\nimport java.net.MalformedURLException;\r\nimport java.net.URI;\r\nimport java.net.URL;\r\nimport java.util.List;\r\nimport java.util.Map;\r\n\r\n@RestController\r\n@Getter\r\n@CrossOrigin(origins = \"*\", allowedHeaders = \"*\")\r\npublic class ShortenUrlController {\r\n\r\n    private final ShortenUrlService shortenUrlService;\r\n    private final HttpServletRequest request;\r\n\r\n    private Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);\r\n\r\n    public ShortenUrlController(ShortenUrlService shortenUrlService, HttpServletRequest request) {\r\n        this.shortenUrlService = shortenUrlService;\r\n        this.request = request;\r\n    }\r\n\r\n    @PostMapping(\"/shorten\")\r\n    public ResponseEntity<ShortenUrl> shortenUrl(@RequestBody ShortenUrl shortenUrl) {\r\n        getLogger().info(\"Short URL: [{}]\", shortenUrl.getOriginalUrl());\r\n        getLogger().info(\"Ip Address Of URL: [{}]\", getRequest().getRemoteAddr());\r\n        ShortenUrl shortUrl = getShortenUrlService().createShortUrl(shortenUrl, getRequest());\r\n        return new ResponseEntity<>(shortUrl, HttpStatus.CREATED);\r\n    }\r\n\r\n    @GetMapping(\"/r/{shortUrl}\")\r\n    public ResponseEntity<String> redirect(@PathVariable(\"shortUrl\") String shortUrl) {\r\n        getLogger().info(\"Redirecting URL: [{}]\", shortUrl);\r\n        ShortenUrl url = getShortenUrlService().redirect(shortUrl, getRequest());\r\n        // Check if the short URL exists\r\n        if (url == null || url.getOriginalUrl() == null) {\r\n            return ResponseEntity.status(HttpStatus.NOT_FOUND)\r\n                    .body(\"Short URL not found\");\r\n        }\r\n\r\n        try {\r\n            URI uri = new URL(url.getOriginalUrl()).toURI();\r\n            return ResponseEntity.status(HttpStatus.FOUND)\r\n                    .header(\"Location\", String.valueOf(uri))\r\n                    .build();\r\n        } catch (MalformedURLException | java.net.URISyntaxException e) {\r\n            return ResponseEntity.status(HttpStatus.BAD_REQUEST)\r\n                    .body(\"Invalid original URL\");\r\n        }\r\n    }\r\n\r\n    @GetMapping(\"/copy/{shortUrl}\")\r\n    public ResponseEntity<String> copyShortUrl(@PathVariable String shortUrl) {\r\n        getLogger().info(\"Copying URL: [{}]\", shortUrl);\r\n        return ResponseEntity.ok(\"http://localhost:8080/r/\" + shortUrl);\r\n    }\r\n\r\n    @GetMapping(\"/share/{shortUrl}\")\r\n    public ResponseEntity<String> shareUrl(@PathVariable String shortUrl) {\r\n        getLogger().info(\"Sharing URL: [{}]\", shortUrl);\r\n        return ResponseEntity.ok(\"http://localhost:8080/r/\" + shortUrl);\r\n    }\r\n\r\n    @GetMapping(\"/qr/{shortUrl}\")\r\n    public ResponseEntity<String> generateQr(@PathVariable String shortUrl) {\r\n        getLogger().info(\"Generating QR: [{}]\", shortUrl);\r\n        return ResponseEntity.ok(\"QR Generated For: \" + shortUrl);\r\n    }\r\n\r\n    @GetMapping(\"/analytics/{shortUrl}\")\r\n    public ResponseEntity<ShortenUrl> getAnalytics(@PathVariable String shortUrl) {\r\n        getLogger().info(\"Getting Analytics: [{}]\", shortUrl);\r\n        ShortenUrl url = getShortenUrlService().getAnalytics(shortUrl);\r\n        return new ResponseEntity<>(url, HttpStatus.OK);\r\n    }\r\n\r\n    @GetMapping(\"/analytics/{shortUrl}/countries\")\r\n    public ResponseEntity<Map<String, Integer>> getCountryAnalytics(@PathVariable String shortUrl) {\r\n        getLogger().info(\"Getting Country Analytics: [{}]\", shortUrl);\r\n        Map<String, Integer> countryMap = getShortenUrlService().getCountryAnalytics(shortUrl);\r\n        return new ResponseEntity<>(countryMap, HttpStatus.OK);\r\n    }\r\n\r\n    @GetMapping(\"/reportMalicious/{shortUrl}\")\r\n    public ResponseEntity<ShortenUrl> reportMalicious(@PathVariable String shortUrl) {\r\n        getLogger().info(\"Reporting Malicious: [{}]\", shortUrl);\r\n        ShortenUrl url = getShortenUrlService().reportMalicious(shortUrl);\r\n        return new ResponseEntity<>(url, HttpStatus.OK);\r\n    }\r\n\r\n    @GetMapping(\"/getAllShortUrls\")\r\n    public ResponseEntity<List<ShortenUrl>> getAllShortUrls() {\r\n        getLogger().info(\"Getting all short url\");\r\n        List<ShortenUrl> shortenUrlList = getShortenUrlService().getAllShortUrls();\r\n        return new ResponseEntity<>(shortenUrlList, HttpStatus.OK);\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/controller/ShortenUrlController.java b/src/main/java/com/hashcode/shortenurl/controller/ShortenUrlController.java
+--- a/src/main/java/com/hashcode/shortenurl/controller/ShortenUrlController.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/src/main/java/com/hashcode/shortenurl/controller/ShortenUrlController.java	(date 1780652147220)
+@@ -24,7 +24,7 @@
+     private final ShortenUrlService shortenUrlService;
+     private final HttpServletRequest request;
+ 
+-    private Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);
++    private final Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);
+ 
+     public ShortenUrlController(ShortenUrlService shortenUrlService, HttpServletRequest request) {
+         this.shortenUrlService = shortenUrlService;
+@@ -78,13 +78,6 @@
+         return ResponseEntity.ok("QR Generated For: " + shortUrl);
+     }
+ 
+-    @GetMapping("/analytics/{shortUrl}")
+-    public ResponseEntity<ShortenUrl> getAnalytics(@PathVariable String shortUrl) {
+-        getLogger().info("Getting Analytics: [{}]", shortUrl);
+-        ShortenUrl url = getShortenUrlService().getAnalytics(shortUrl);
+-        return new ResponseEntity<>(url, HttpStatus.OK);
+-    }
+-
+     @GetMapping("/analytics/{shortUrl}/countries")
+     public ResponseEntity<Map<String, Integer>> getCountryAnalytics(@PathVariable String shortUrl) {
+         getLogger().info("Getting Country Analytics: [{}]", shortUrl);
+Index: src/main/java/com/hashcode/shortenurl/service/ShortenUrlService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.hashcode.shortenurl.service;\r\n\r\nimport com.hashcode.shortenurl.model.ShortenUrl;\r\nimport jakarta.servlet.http.HttpServletRequest;\r\n\r\nimport java.time.LocalDateTime;\r\nimport java.util.List;\r\nimport java.util.Map;\r\n\r\npublic interface  ShortenUrlService {\r\n    public ShortenUrl createShortUrl(ShortenUrl shortenUrl, HttpServletRequest request);\r\n    public ShortenUrl redirect(String shortUrl, HttpServletRequest request);\r\n    public ShortenUrl getAnalytics(String shortUrl);\r\n    public Map<String, Integer> getCountryAnalytics(String shortUrl);\r\n    public ShortenUrl reportMalicious(String shortUrl);\r\n    public List<ShortenUrl> getAllShortUrls();\r\n\r\n}\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/service/ShortenUrlService.java b/src/main/java/com/hashcode/shortenurl/service/ShortenUrlService.java
+--- a/src/main/java/com/hashcode/shortenurl/service/ShortenUrlService.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/src/main/java/com/hashcode/shortenurl/service/ShortenUrlService.java	(date 1780652147321)
+@@ -3,7 +3,6 @@
+ import com.hashcode.shortenurl.model.ShortenUrl;
+ import jakarta.servlet.http.HttpServletRequest;
+ 
+-import java.time.LocalDateTime;
+ import java.util.List;
+ import java.util.Map;
+ 
+Index: src/main/java/com/hashcode/shortenurl/service/impl/ShortenUrlServiceImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.hashcode.shortenurl.service.impl;\r\n\r\nimport com.hashcode.shortenurl.model.DeviceInfo;\r\nimport com.hashcode.shortenurl.model.ShortenUrl;\r\nimport com.hashcode.shortenurl.repository.ShortenUrlMongoRepository;\r\nimport com.hashcode.shortenurl.service.GeoIpService;\r\nimport com.hashcode.shortenurl.service.ShortenUrlService;\r\nimport lombok.Getter;\r\nimport org.slf4j.Logger;\r\nimport org.slf4j.LoggerFactory;\r\nimport org.springframework.stereotype.Service;\r\n\r\nimport jakarta.servlet.http.HttpServletRequest;\r\n\r\nimport java.time.LocalDateTime;\r\nimport java.util.ArrayList;\r\nimport java.util.HashMap;\r\nimport java.util.List;\r\nimport java.util.Map;\r\n\r\nimport static com.hashcode.shortenurl.util.Utility.*;\r\n\r\n@Service\r\n@Getter\r\npublic class ShortenUrlServiceImpl implements ShortenUrlService {\r\n\r\n    final ShortenUrlMongoRepository shortenUrlMongoRepository;\r\n\r\n\r\n    private final Logger logger = LoggerFactory.getLogger(ShortenUrlServiceImpl.class);\r\n    final GeoIpService geoIpService;\r\n\r\n\r\n\r\n    public ShortenUrlServiceImpl(ShortenUrlMongoRepository shortenUrlMongoRepository, GeoIpService geoIpService) {\r\n        this.shortenUrlMongoRepository = shortenUrlMongoRepository;\r\n        this.geoIpService = geoIpService;\r\n    }\r\n\r\n    @Override\r\n    public ShortenUrl createShortUrl(ShortenUrl shortenUrl, HttpServletRequest request) {\r\n\r\n        if (shortenUrl.getOriginalUrl() == null || shortenUrl.getOriginalUrl().trim().isEmpty()) {\r\n\r\n            throw new IllegalArgumentException(\"URL cannot be empty\");\r\n        }\r\n\r\n        String normalizedUrl = normalizeUrl(shortenUrl.getOriginalUrl());\r\n\r\n        String generatedShortUrl = generateShortUrl();\r\n\r\n        while (getShortenUrlMongoRepository().existsById(generatedShortUrl)) {\r\n\r\n            generatedShortUrl = generateShortUrl();\r\n        }\r\n\r\n        ShortenUrl url = new ShortenUrl();\r\n        Map<String, Integer> map = new HashMap<>();\r\n        map.put(getClientIp(request), 0);\r\n\r\n\r\n        if (shortenUrl.getAlias() != null && !shortenUrl.getAlias().trim().isEmpty()) {\r\n\r\n            String customAlias = shortenUrl.getAlias().trim();\r\n\r\n            if (getShortenUrlMongoRepository().existsById(customAlias)) {\r\n\r\n                throw new IllegalArgumentException(\"Alias already exists\");\r\n            }\r\n\r\n            url.setShortUrl(customAlias);\r\n            url.setAlias(customAlias);\r\n\r\n        } else {\r\n            url.setShortUrl(generatedShortUrl);\r\n            url.setAlias(generatedShortUrl);\r\n        }\r\n\r\n        url.setOriginalUrl(normalizedUrl);\r\n        url.setCreatedAt(LocalDateTime.now());\r\n        url.setLastClickedAt(LocalDateTime.now());\r\n        url.setActive(true);\r\n        url.setClickCount(0);\r\n        url.setIpAddressMap(map);\r\n\r\n        logger.info(\"Short URL created: {}\", url.getShortUrl());\r\n        return getShortenUrlMongoRepository().save(url);\r\n    }\r\n\r\n    @Override\r\n    public ShortenUrl redirect(String shortUrl, HttpServletRequest request) {\r\n\r\n        ShortenUrl shortenUrl = shortenUrlMongoRepository\r\n                .findById(shortUrl)\r\n                .orElseThrow(() -> new RuntimeException(\"Short URL not found\"));\r\n\r\n        shortenUrl.setClickCount(shortenUrl.getClickCount() + 1);\r\n\r\n\r\n        // set active\r\n        shortenUrl.setActive(true);\r\n\r\n        // last clicked time\r\n        shortenUrl.setLastClickedAt(LocalDateTime.now());\r\n\r\n        // device\r\n        String userAgent = request.getHeader(\"User-Agent\");\r\n\r\n        if (userAgent != null && userAgent.contains(\"Mobile\")) {\r\n            shortenUrl.setDevice(\"Mobile\");\r\n        } else {\r\n            shortenUrl.setDevice(\"Desktop\");\r\n        }\r\n\r\n        // country\r\n        shortenUrl.setCountry(\"India\");\r\n\r\n        // ip tracking\r\n        String ip = getClientIp(request);\r\n\r\n        Map<String, Integer> ipMap = shortenUrl.getIpAddressMap();\r\n\r\n        if (ipMap == null) {\r\n            ipMap = new HashMap<>();\r\n        }\r\n\r\n        ipMap.put(ip, ipMap.getOrDefault(ip, 0) + 1);\r\n\r\n        shortenUrl.setIpAddressMap(ipMap);\r\n\r\n        String clientIp = getClientIp(request);\r\n\r\n        if (shortenUrl.getIpAddressMap() == null) {\r\n            shortenUrl.setIpAddressMap(new HashMap<>());\r\n        }\r\n        shortenUrl.getIpAddressMap().merge(clientIp, 1, Integer::sum);\r\n\r\n        // Resolve country of origin for the click (graceful fallback to \"Unknown\")\r\n        GeoIpService.GeoLocation geo = getGeoIpService().lookupCountry(clientIp);\r\n        if (shortenUrl.getCountryClickMap() == null) {\r\n            shortenUrl.setCountryClickMap(new HashMap<>());\r\n        }\r\n        shortenUrl.getCountryClickMap().merge(geo.getCountry(), 1, Integer::sum);\r\n\r\n        // Capture device type, OS type and country from the incoming request\r\n        DeviceInfo deviceInfo = extractDeviceInfo(request, geo.getCountry(), geo.getCountryCode());\r\n        if (shortenUrl.getDeviceInfoList() == null) {\r\n            shortenUrl.setDeviceInfoList(new ArrayList<>());\r\n        }\r\n        shortenUrl.getDeviceInfoList().add(deviceInfo);\r\n\r\n        return getShortenUrlMongoRepository().save(shortenUrl);\r\n\r\n    }\r\n\r\n\r\n    @Override\r\n    public ShortenUrl getAnalytics(String shortUrl) {\r\n\r\n        return getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException(\"Short URL not found\"));\r\n    }\r\n\r\n    @Override\r\n    public Map<String, Integer> getCountryAnalytics(String shortUrl) {\r\n        ShortenUrl url = getShortenUrlMongoRepository().findById(shortUrl)\r\n                .orElseThrow(() -> new RuntimeException(\"Short URL not found\"));\r\n        return url.getCountryClickMap() != null ? url.getCountryClickMap() : new HashMap<>();\r\n    }\r\n\r\n    @Override\r\n    public ShortenUrl reportMalicious(String shortUrl) {\r\n\r\n        ShortenUrl shortenUrl = getShortenUrlMongoRepository().findById(shortUrl).orElseThrow(() -> new RuntimeException(\"Short URL not found\"));\r\n        return getShortenUrlMongoRepository().save(shortenUrl);\r\n    }\r\n\r\n    @Override\r\n    public List<ShortenUrl> getAllShortUrls() {\r\n\r\n        return getShortenUrlMongoRepository()\r\n                .findAll();\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/service/impl/ShortenUrlServiceImpl.java b/src/main/java/com/hashcode/shortenurl/service/impl/ShortenUrlServiceImpl.java
+--- a/src/main/java/com/hashcode/shortenurl/service/impl/ShortenUrlServiceImpl.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/src/main/java/com/hashcode/shortenurl/service/impl/ShortenUrlServiceImpl.java	(date 1780652147342)
+@@ -93,41 +93,17 @@
+         ShortenUrl shortenUrl = shortenUrlMongoRepository
+                 .findById(shortUrl)
+                 .orElseThrow(() -> new RuntimeException("Short URL not found"));
+-
++        // increment click count
+         shortenUrl.setClickCount(shortenUrl.getClickCount() + 1);
+ 
+-
+         // set active
+         shortenUrl.setActive(true);
+ 
+         // last clicked time
+         shortenUrl.setLastClickedAt(LocalDateTime.now());
+ 
+-        // device
+-        String userAgent = request.getHeader("User-Agent");
+-
+-        if (userAgent != null && userAgent.contains("Mobile")) {
+-            shortenUrl.setDevice("Mobile");
+-        } else {
+-            shortenUrl.setDevice("Desktop");
+-        }
+-
+-        // country
+-        shortenUrl.setCountry("India");
+ 
+         // ip tracking
+-        String ip = getClientIp(request);
+-
+-        Map<String, Integer> ipMap = shortenUrl.getIpAddressMap();
+-
+-        if (ipMap == null) {
+-            ipMap = new HashMap<>();
+-        }
+-
+-        ipMap.put(ip, ipMap.getOrDefault(ip, 0) + 1);
+-
+-        shortenUrl.setIpAddressMap(ipMap);
+-
+         String clientIp = getClientIp(request);
+ 
+         if (shortenUrl.getIpAddressMap() == null) {
+Index: src/main/java/com/hashcode/shortenurl/service/impl/DashboardServiceImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.hashcode.shortenurl.service.impl;\r\n\r\nimport com.hashcode.shortenurl.model.DashboardAnalytics;\r\nimport com.hashcode.shortenurl.model.ShortenUrl;\r\nimport com.hashcode.shortenurl.repository.ShortenUrlMongoRepository;\r\nimport com.hashcode.shortenurl.service.DashboardService;\r\nimport org.springframework.stereotype.Service;\r\n\r\nimport java.time.LocalDate;\r\nimport java.time.LocalDateTime;\r\nimport java.util.HashMap;\r\nimport java.util.List;\r\nimport java.util.Map;\r\n\r\n@Service\r\npublic class DashboardServiceImpl implements DashboardService {\r\n\r\n    private final ShortenUrlMongoRepository repository;\r\n\r\n    public DashboardServiceImpl(ShortenUrlMongoRepository repository) {\r\n        this.repository = repository;\r\n    }\r\n\r\n    @Override\r\n    public DashboardAnalytics getDashboardData() {\r\n\r\n        List<ShortenUrl> allUrls = repository.findAll();\r\n\r\n        long totalLinksCreated = allUrls.size();\r\n        long activeLinks = repository.countByActiveTrue();\r\n        long allTimeClicks = allUrls.stream().mapToLong(ShortenUrl::getClickCount).sum();\r\n        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();\r\n        long totalClicksToday = repository.findByLastClickedAtAfter(startOfDay).stream().mapToLong(ShortenUrl::getClickCount).sum();\r\n        List<ShortenUrl> topPerformingLinks = repository.findTop5ByOrderByClickCountDesc();\r\n        Map<String, Integer> clicksByDevice = new HashMap<>();\r\n        Map<String, Integer> clicksByCountry = new HashMap<>();\r\n\r\n        for (ShortenUrl url : allUrls) {\r\n            String device = url.getDevice() != null ? url.getDevice() : \"Unknown\";\r\n            clicksByDevice.put(device, clicksByDevice.getOrDefault(device, 0) + 1);\r\n\r\n\r\n            String country = url.getCountry() != null ? url.getCountry() : \"Unknown\";\r\n            clicksByCountry.put(country, clicksByCountry.getOrDefault(country, 0) + 1);\r\n        }\r\n\r\n        return new DashboardAnalytics(totalLinksCreated, totalClicksToday, allTimeClicks, activeLinks, topPerformingLinks, clicksByDevice, clicksByCountry);\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/service/impl/DashboardServiceImpl.java b/src/main/java/com/hashcode/shortenurl/service/impl/DashboardServiceImpl.java
+--- a/src/main/java/com/hashcode/shortenurl/service/impl/DashboardServiceImpl.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/src/main/java/com/hashcode/shortenurl/service/impl/DashboardServiceImpl.java	(date 1780652147384)
+@@ -35,13 +35,21 @@
+         Map<String, Integer> clicksByDevice = new HashMap<>();
+         Map<String, Integer> clicksByCountry = new HashMap<>();
+ 
+-        for (ShortenUrl url : allUrls) {
+-            String device = url.getDevice() != null ? url.getDevice() : "Unknown";
+-            clicksByDevice.put(device, clicksByDevice.getOrDefault(device, 0) + 1);
++        for(ShortenUrl url : allUrls){
++
++            if (url.getDeviceInfoList() != null){
++
++                url.getDeviceInfoList().forEach(deviceInfo -> {
++
++                    String device = deviceInfo.getDeviceType() != null ? deviceInfo.getDeviceType() : "Unknown";
++
++                    clicksByDevice.put(device, clicksByDevice.getOrDefault(device, 0)+1);
+ 
++                    String country = deviceInfo.getCountry() != null ? deviceInfo.getCountry() : "Unknown";
+ 
+-            String country = url.getCountry() != null ? url.getCountry() : "Unknown";
+-            clicksByCountry.put(country, clicksByCountry.getOrDefault(country, 0) + 1);
++                    clicksByCountry.put(country, clicksByCountry.getOrDefault(country, 0)+1);
++                });
++            }
+         }
+ 
+         return new DashboardAnalytics(totalLinksCreated, totalClicksToday, allTimeClicks, activeLinks, topPerformingLinks, clicksByDevice, clicksByCountry);
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\r\n    <modelVersion>4.0.0</modelVersion>\r\n    <parent>\r\n        <groupId>org.springframework.boot</groupId>\r\n        <artifactId>spring-boot-starter-parent</artifactId>\r\n        <version>3.5.0</version>\r\n        <relativePath/> <!-- lookup parent from repository -->\r\n    </parent>\r\n    <groupId>com.hashcode</groupId>\r\n    <artifactId>shorten-url</artifactId>\r\n    <version>0.0.1-SNAPSHOT</version>\r\n    <name>shorten-url</name>\r\n    <description>shorten-url</description>\r\n    <url/>\r\n    <licenses>\r\n        <license/>\r\n    </licenses>\r\n    <developers>\r\n        <developer/>\r\n    </developers>\r\n    <scm>\r\n        <connection/>\r\n        <developerConnection/>\r\n        <tag/>\r\n        <url/>\r\n    </scm>\r\n    <properties>\r\n        <java.version>17</java.version>\r\n        <lambok.version>1.18.34</lambok.version>\r\n        <commons-validator.version>1.9.0</commons-validator.version>\r\n        <geoip2.version>4.2.1</geoip2.version>\r\n    </properties>\r\n    <dependencies>\r\n        <dependency>\r\n            <groupId>org.springframework.boot</groupId>\r\n            <artifactId>spring-boot-starter-data-mongodb</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.springframework.boot</groupId>\r\n            <artifactId>spring-boot-starter-web</artifactId>\r\n        </dependency>\r\n\r\n        <dependency>\r\n            <groupId>org.springframework.boot</groupId>\r\n            <artifactId>spring-boot-starter-test</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.projectlombok</groupId>\r\n            <artifactId>lombok</artifactId>\r\n            <version>${lombok.version}</version>\r\n            <scope>provided</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>commons-validator</groupId>\r\n            <artifactId>commons-validator</artifactId>\r\n            <version>${commons-validator.version}</version>\r\n        </dependency>\r\n        <!-- MaxMind GeoIP2 for resolving country of origin from client IP (offline DB lookup) -->\r\n        <dependency>\r\n            <groupId>com.maxmind.geoip2</groupId>\r\n            <artifactId>geoip2</artifactId>\r\n            <version>${geoip2.version}</version>\r\n        </dependency>\r\n    </dependencies>\r\n\r\n    <build>\r\n        <plugins>\r\n            <plugin>\r\n                <groupId>org.springframework.boot</groupId>\r\n                <artifactId>spring-boot-maven-plugin</artifactId>\r\n            </plugin>\r\n            <plugin>\r\n                <groupId>com.google.cloud.tools</groupId>\r\n                <artifactId>appengine-maven-plugin</artifactId>\r\n                <version>2.4.4</version>\r\n                <configuration>\r\n                    <version>1</version>\r\n                    <projectId>GCLOUD_CONFIG</projectId>\r\n                </configuration>\r\n            </plugin>\r\n        </plugins>\r\n    </build>\r\n\r\n</project>\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/pom.xml	(date 1780652147412)
+@@ -69,6 +69,19 @@
+     <build>
+         <plugins>
+             <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-compiler-plugin</artifactId>
++                <configuration>
++                    <annotationProcessorPaths>
++                        <path>
++                            <groupId>org.projectlombok</groupId>
++                            <artifactId>lombok</artifactId>
++                            <version>${lombok.version}</version>
++                        </path>
++                    </annotationProcessorPaths>
++                </configuration>
++            </plugin>
++            <plugin>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-maven-plugin</artifactId>
+             </plugin>
+Index: src/main/java/com/hashcode/shortenurl/model/DashboardAnalytics.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.hashcode.shortenurl.model;\r\n\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Data;\r\nimport lombok.NoArgsConstructor;\r\nimport java.util.List;\r\nimport java.util.Map;\r\n\r\n@Data\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\npublic class DashboardAnalytics{\r\n\r\n    private long totalLinksCreated;\r\n    private long totalClicksToday;\r\n    private long allTimeClicks;\r\n    private long activeLinks;\r\n    private List<ShortenUrl> topPerformingLinks;\r\n    private Map<String, Integer> clicksByDevice;\r\n    private Map<String, Integer> clicksByCountry;\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/model/DashboardAnalytics.java b/src/main/java/com/hashcode/shortenurl/model/DashboardAnalytics.java
+--- a/src/main/java/com/hashcode/shortenurl/model/DashboardAnalytics.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/src/main/java/com/hashcode/shortenurl/model/DashboardAnalytics.java	(date 1780652147435)
+@@ -16,6 +16,6 @@
+     private long allTimeClicks;
+     private long activeLinks;
+     private List<ShortenUrl> topPerformingLinks;
+-    private Map<String, Integer> clicksByDevice;
+     private Map<String, Integer> clicksByCountry;
++    private Map<String, Integer> clicksByDevice;
+ }
+\ No newline at end of file
+Index: src/main/java/com/hashcode/shortenurl/model/DeviceInfo.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.hashcode.shortenurl.model;\r\n\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Getter;\r\nimport lombok.NoArgsConstructor;\r\nimport lombok.Setter;\r\n\r\nimport java.time.LocalDateTime;\r\n\r\n@Getter\r\n@Setter\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\npublic class DeviceInfo {\r\n    private String deviceType;\r\n    private String osType;\r\n    private String ipAddress;\r\n    private String country;\r\n    private String countryCode;\r\n    private LocalDateTime accessedAt;\r\n}\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/model/DeviceInfo.java b/src/main/java/com/hashcode/shortenurl/model/DeviceInfo.java
+--- a/src/main/java/com/hashcode/shortenurl/model/DeviceInfo.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/src/main/java/com/hashcode/shortenurl/model/DeviceInfo.java	(date 1780652147457)
+@@ -14,6 +14,7 @@
+ public class DeviceInfo {
+     private String deviceType;
+     private String osType;
++    private String browser;
+     private String ipAddress;
+     private String country;
+     private String countryCode;
+Index: src/main/resources/application.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>spring.application.name=shorten-url\r\nserver.port=8080\r\n\r\n# Mongo DB credentials\r\nspring.data.mongodb.uri=YOUR_MONGODB_URI\r\nspring.data.mongodb.database=YOUR_DATABASE_NAME\r\n\r\n\r\n# logging Config\r\nlogging.level.org.springframework=ERROR\r\nlogging.level.com.hashcode.mediaresource=DEBUG\r\nlogging.level.org.mongodb=ERROR\r\nlogging.file.path=logs/\r\nlogging.file.name=logs/application.log\r\nlogging.pattern.file=%d %p %c{1} [%t] %m%n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>ISO-8859-1
+===================================================================
+diff --git a/src/main/resources/application.properties b/src/main/resources/application.properties
+--- a/src/main/resources/application.properties	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ b/src/main/resources/application.properties	(date 1780654755633)
+@@ -1,10 +1,9 @@
+ spring.application.name=shorten-url
+-server.port=8080
++server.port=${SERVER_PORT}
+ 
+ # Mongo DB credentials
+-spring.data.mongodb.uri=YOUR_MONGODB_URI
+-spring.data.mongodb.database=YOUR_DATABASE_NAME
+-
++spring.data.mongodb.uri=${MONGODB_URL}
++spring.data.mongodb.database=${MONGODB_COLLECTION}
+ 
+ # logging Config
+ logging.level.org.springframework=ERROR
+@@ -12,4 +11,4 @@
+ logging.level.org.mongodb=ERROR
+ logging.file.path=logs/
+ logging.file.name=logs/application.log
+-logging.pattern.file=%d %p %c{1} [%t] %m%n
++logging.pattern.file=%d %p %c{1} [%t] %m%n
+\ No newline at end of file
+Index: src/main/java/com/hashcode/shortenurl/model/CountryClicks.java
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/model/CountryClicks.java b/src/main/java/com/hashcode/shortenurl/model/CountryClicks.java
+deleted file mode 100644
+--- a/src/main/java/com/hashcode/shortenurl/model/CountryClicks.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ /dev/null	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
+@@ -1,13 +0,0 @@
+-package com.hashcode.shortenurl.model;
+-import lombok.AllArgsConstructor;
+-import lombok.Data;
+-import lombok.NoArgsConstructor;
+-
+-@Data
+-@NoArgsConstructor
+-@AllArgsConstructor
+-
+-public class CountryClicks {
+-    private String country;
+-    private long clicks;
+-}
+\ No newline at end of file
+Index: src/main/java/com/hashcode/shortenurl/model/DeviceClicks.java
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/model/DeviceClicks.java b/src/main/java/com/hashcode/shortenurl/model/DeviceClicks.java
+deleted file mode 100644
+--- a/src/main/java/com/hashcode/shortenurl/model/DeviceClicks.java	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
++++ /dev/null	(revision ac1e95e0d5deb90cf11479c636687211316e137c)
+@@ -1,14 +0,0 @@
+-package com.hashcode.shortenurl.model;
+-
+-import lombok.AllArgsConstructor;
+-import lombok.Data;
+-import lombok.NoArgsConstructor;
+-
+-@Data
+-@NoArgsConstructor
+-@AllArgsConstructor
+-public class DeviceClicks {
+-    private String device;
+-    private long clicks;
+-
+-}
+\ No newline at end of file
+Index: src/main/java/com/hashcode/shortenurl/controller/AnalyticsController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/controller/AnalyticsController.java b/src/main/java/com/hashcode/shortenurl/controller/AnalyticsController.java
+new file mode 100644
+--- /dev/null	(date 1780652147647)
++++ b/src/main/java/com/hashcode/shortenurl/controller/AnalyticsController.java	(date 1780652147647)
+@@ -0,0 +1,27 @@
++package com.hashcode.shortenurl.controller;
++
++import com.hashcode.shortenurl.model.LinkAnalytics;
++import com.hashcode.shortenurl.service.AnalyticsService;
++import org.springframework.http.ResponseEntity;
++import org.springframework.web.bind.annotation.*;
++
++@RestController
++@RequestMapping("/analytics")
++@CrossOrigin(origins = "*", allowedHeaders = "*")
++public class AnalyticsController {
++
++    private final AnalyticsService analyticsService;
++
++    public AnalyticsController(AnalyticsService analyticsService) {
++        this.analyticsService = analyticsService;
++    }
++
++    @GetMapping("/{shortUrl}")
++    public ResponseEntity<LinkAnalytics> getAnalytics(
++            @PathVariable String shortUrl) {
++
++        return ResponseEntity.ok(
++                analyticsService.getAnalytics(shortUrl)
++        );
++    }
++}
+\ No newline at end of file
+Index: src/main/java/com/hashcode/shortenurl/service/AnalyticsService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/service/AnalyticsService.java b/src/main/java/com/hashcode/shortenurl/service/AnalyticsService.java
+new file mode 100644
+--- /dev/null	(date 1780652147588)
++++ b/src/main/java/com/hashcode/shortenurl/service/AnalyticsService.java	(date 1780652147588)
+@@ -0,0 +1,8 @@
++package com.hashcode.shortenurl.service;
++
++import com.hashcode.shortenurl.model.LinkAnalytics;
++
++public interface AnalyticsService {
++
++    LinkAnalytics getAnalytics(String shortUrl);
++}
+\ No newline at end of file
+Index: src/main/java/com/hashcode/shortenurl/service/impl/AnalyticsServiceImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/service/impl/AnalyticsServiceImpl.java b/src/main/java/com/hashcode/shortenurl/service/impl/AnalyticsServiceImpl.java
+new file mode 100644
+--- /dev/null	(date 1780652147614)
++++ b/src/main/java/com/hashcode/shortenurl/service/impl/AnalyticsServiceImpl.java	(date 1780652147614)
+@@ -0,0 +1,89 @@
++package com.hashcode.shortenurl.service.impl;
++
++import com.hashcode.shortenurl.model.DeviceInfo;
++import com.hashcode.shortenurl.model.LinkAnalytics;
++import com.hashcode.shortenurl.model.ShortenUrl;
++import com.hashcode.shortenurl.repository.ShortenUrlMongoRepository;
++import com.hashcode.shortenurl.service.AnalyticsService;
++import lombok.Getter;
++import org.springframework.stereotype.Service;
++
++import java.util.HashMap;
++import java.util.Map;
++
++@Service
++@Getter
++public class AnalyticsServiceImpl implements AnalyticsService {
++
++    private final ShortenUrlMongoRepository repository;
++
++    public AnalyticsServiceImpl(ShortenUrlMongoRepository repository) {
++
++        this.repository = repository;
++    }
++
++    @Override
++    public LinkAnalytics getAnalytics(String shortenUrl) {
++
++        ShortenUrl url = repository.findById(shortenUrl)
++                .orElseThrow(() -> new RuntimeException("Link not found"));
++
++        Map<String, Integer> clicksByCountry =
++                url.getCountryClickMap() != null
++                        ? url.getCountryClickMap()
++                        : new HashMap<>();
++
++        Map<String, Integer> clicksByDevice = new HashMap<>();
++
++        Map<String, Integer>operatingSystems = new HashMap<>();
++
++        Map<String, Integer>activityByHour = new HashMap<>();
++
++        Map<String, Integer>clickActivityOverTime = new HashMap<>();
++
++
++
++        if (url.getDeviceInfoList() != null) {
++
++            for (DeviceInfo device : url.getDeviceInfoList()) {
++
++                String deviceType =
++                        device.getDeviceType() != null
++                                ? device.getDeviceType()
++                                : "Unknown";
++
++                operatingSystems.put(
++                        deviceType,
++                        operatingSystems.getOrDefault(deviceType, 0) + 1
++                );
++
++                if(device.getAccessedAt() != null) {
++                    String hour = String.valueOf(device.getAccessedAt().getHour());
++                    activityByHour.put(
++                            hour,
++                            activityByHour.getOrDefault(hour, 0) + 1
++                    );
++
++                    String date = device.getAccessedAt().toLocalDate().toString();
++                    clickActivityOverTime.put(
++                            date,
++                            clickActivityOverTime.getOrDefault(date, 0) + 1
++                    );
++                }
++            }
++
++        }
++
++        return new LinkAnalytics(
++                url.getShortUrl(),
++                url.getOriginalUrl(),
++                url.getClickCount(),
++                clicksByCountry,
++                clicksByDevice,
++                new HashMap<>(), // browser
++                operatingSystems,
++                activityByHour,
++                clickActivityOverTime // timeline
++        );
++    }
++}
+\ No newline at end of file
+Index: src/main/java/com/hashcode/shortenurl/model/LinkAnalytics.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/hashcode/shortenurl/model/LinkAnalytics.java b/src/main/java/com/hashcode/shortenurl/model/LinkAnalytics.java
+new file mode 100644
+--- /dev/null	(date 1780652147572)
++++ b/src/main/java/com/hashcode/shortenurl/model/LinkAnalytics.java	(date 1780652147572)
+@@ -0,0 +1,25 @@
++package com.hashcode.shortenurl.model;
++
++import lombok.AllArgsConstructor;
++import lombok.Data;
++import lombok.NoArgsConstructor;
++
++import java.util.Map;
++
++    @Data
++    @NoArgsConstructor
++    @AllArgsConstructor
++    public class LinkAnalytics {
++
++        private String shortUrl;
++        private String originalUrl;
++        private long totalClicks;
++
++        private Map<String, Integer> clicksByCountry;
++        private Map<String, Integer> clicksByDevice;
++        private Map<String, Integer> clicksByBrowser;
++        private Map<String, Integer> operatingSystems;
++        private Map<String, Integer> activityByHour;
++        private Map<String, Integer> clickActivityOverTime;
++    }
++
