@@ -24,7 +24,7 @@ public class ShortenUrlController {
     private final ShortenUrlService shortenUrlService;
     private final HttpServletRequest request;
 
-    private Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);
+    private final Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);
 
     public ShortenUrlController(ShortenUrlService shortenUrlService, HttpServletRequest request) {
         this.shortenUrlService = shortenUrlService;
@@ -76,13 +76,6 @@ public class ShortenUrlController {
     public ResponseEntity<String> generateQr(@PathVariable String shortUrl) {
         getLogger().info("Generating QR: [{}]", shortUrl);
         return ResponseEntity.ok("QR Generated For: " + shortUrl);
-    }
-
-    @GetMapping("/analytics/{shortUrl}")
-    public ResponseEntity<ShortenUrl> getAnalytics(@PathVariable String shortUrl) {
-        getLogger().info("Getting Analytics: [{}]", shortUrl);
-        ShortenUrl url = getShortenUrlService().getAnalytics(shortUrl);
-        return new ResponseEntity<>(url, HttpStatus.OK);
     }
 
     @GetMapping("/analytics/{shortUrl}/countries")
