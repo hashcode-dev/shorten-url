@@ -1,6 +1,6 @@
 package com.hashcode.shortenurl.model;
 
-import lombok.Getter;
+import  lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -19,8 +19,6 @@ public class ShortenUrl {
     private String shortUrl;
     private String alias;
     private String originalUrl;
-    private String country;
-    private String device;
     private LocalDateTime createdAt;
     private long clickCount;
     private LocalDateTime lastClickedAt;
@@ -29,4 +27,5 @@ public class ShortenUrl {
     private Map<String, Integer> ipAddressMap;
     private Map<String, Integer> countryClickMap;
     private List<DeviceInfo> deviceInfoList;
+
 }

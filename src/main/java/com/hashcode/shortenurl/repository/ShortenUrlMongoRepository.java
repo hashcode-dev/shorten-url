@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
 public interface ShortenUrlMongoRepository extends MongoRepository<ShortenUrl, String> {
 
     long countByActiveTrue();
@@ -13,4 +14,5 @@ public interface ShortenUrlMongoRepository extends MongoRepository<ShortenUrl, S
     List<ShortenUrl> findByLastClickedAtAfter(LocalDateTime time);
 
     List<ShortenUrl> findTop5ByOrderByClickCountDesc();
+
 }

@@ -1,5 +1,6 @@
 package com.hashcode.shortenurl.controller;
 
+import com.hashcode.shortenurl.model.LinkListItem;
 import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.service.ShortenUrlService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +25,7 @@ public class ShortenUrlController {
     private final ShortenUrlService shortenUrlService;
     private final HttpServletRequest request;
 
-    private Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);
+    private final Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);
 
     public ShortenUrlController(ShortenUrlService shortenUrlService, HttpServletRequest request) {
         this.shortenUrlService = shortenUrlService;
@@ -78,13 +79,6 @@ public class ShortenUrlController {
         return ResponseEntity.ok("QR Generated For: " + shortUrl);
     }
 
-    @GetMapping("/analytics/{shortUrl}")
-    public ResponseEntity<ShortenUrl> getAnalytics(@PathVariable String shortUrl) {
-        getLogger().info("Getting Analytics: [{}]", shortUrl);
-        ShortenUrl url = getShortenUrlService().getAnalytics(shortUrl);
-        return new ResponseEntity<>(url, HttpStatus.OK);
-    }
-
     @GetMapping("/analytics/{shortUrl}/countries")
     public ResponseEntity<Map<String, Integer>> getCountryAnalytics(@PathVariable String shortUrl) {
         getLogger().info("Getting Country Analytics: [{}]", shortUrl);
@@ -104,5 +98,10 @@ public class ShortenUrlController {
         getLogger().info("Getting all short url");
         List<ShortenUrl> shortenUrlList = getShortenUrlService().getAllShortUrls();
         return new ResponseEntity<>(shortenUrlList, HttpStatus.OK);
+    }
+
+    @GetMapping("/links")
+    public ResponseEntity<List<LinkListItem>> getLinks() {
+    return ResponseEntity.ok(shortenUrlService.getLinks());
     }
 }

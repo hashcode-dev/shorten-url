@@ -16,6 +16,6 @@ public class DashboardAnalytics{
     private long allTimeClicks;
     private long activeLinks;
     private List<ShortenUrl> topPerformingLinks;
-    private Map<String, Integer> clicksByDevice;
     private Map<String, Integer> clicksByCountry;
+    private Map<String, Integer> clicksByDevice;
 }

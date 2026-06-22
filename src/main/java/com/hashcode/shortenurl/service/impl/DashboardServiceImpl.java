@@ -4,6 +4,7 @@ import com.hashcode.shortenurl.model.DashboardAnalytics;
 import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.repository.ShortenUrlMongoRepository;
 import com.hashcode.shortenurl.service.DashboardService;
+import lombok.Getter;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Getter
 public class DashboardServiceImpl implements DashboardService {
 
     private final ShortenUrlMongoRepository repository;
@@ -24,24 +26,32 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public DashboardAnalytics getDashboardData() {
 
-        List<ShortenUrl> allUrls = repository.findAll();
+        List<ShortenUrl> allUrls = getRepository().findAll();
 
         long totalLinksCreated = allUrls.size();
-        long activeLinks = repository.countByActiveTrue();
+        long activeLinks = getRepository().countByActiveTrue();
         long allTimeClicks = allUrls.stream().mapToLong(ShortenUrl::getClickCount).sum();
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        long totalClicksToday = repository.findByLastClickedAtAfter(startOfDay).stream().mapToLong(ShortenUrl::getClickCount).sum();
-        List<ShortenUrl> topPerformingLinks = repository.findTop5ByOrderByClickCountDesc();
+        long totalClicksToday = getRepository().findByLastClickedAtAfter(startOfDay).stream().mapToLong(ShortenUrl::getClickCount).sum();
+        List<ShortenUrl> topPerformingLinks = getRepository().findTop5ByOrderByClickCountDesc();
         Map<String, Integer> clicksByDevice = new HashMap<>();
         Map<String, Integer> clicksByCountry = new HashMap<>();
 
-        for (ShortenUrl url : allUrls) {
-            String device = url.getDevice() != null ? url.getDevice() : "Unknown";
-            clicksByDevice.put(device, clicksByDevice.getOrDefault(device, 0) + 1);
+        for(ShortenUrl url : allUrls){
 
+            if (url.getDeviceInfoList() != null){
 
-            String country = url.getCountry() != null ? url.getCountry() : "Unknown";
-            clicksByCountry.put(country, clicksByCountry.getOrDefault(country, 0) + 1);
+                url.getDeviceInfoList().forEach(deviceInfo -> {
+
+                    String device = deviceInfo.getDeviceType() != null ? deviceInfo.getDeviceType() : "Unknown";
+
+                    clicksByDevice.put(device, clicksByDevice.getOrDefault(device, 0)+1);
+
+                    String country = deviceInfo.getCountry() != null ? deviceInfo.getCountry() : "Unknown";
+
+                    clicksByCountry.put(country, clicksByCountry.getOrDefault(country, 0)+1);
+                });
+            }
         }
 
         return new DashboardAnalytics(totalLinksCreated, totalClicksToday, allTimeClicks, activeLinks, topPerformingLinks, clicksByDevice, clicksByCountry);

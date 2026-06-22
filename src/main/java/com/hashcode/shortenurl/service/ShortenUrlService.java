@@ -1,9 +1,9 @@
 package com.hashcode.shortenurl.service;
 
+import com.hashcode.shortenurl.model.LinkListItem;
 import com.hashcode.shortenurl.model.ShortenUrl;
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +14,6 @@ public interface  ShortenUrlService {
     public Map<String, Integer> getCountryAnalytics(String shortUrl);
     public ShortenUrl reportMalicious(String shortUrl);
     public List<ShortenUrl> getAllShortUrls();
-
+    public List<LinkListItem> getLinks();
 }
 

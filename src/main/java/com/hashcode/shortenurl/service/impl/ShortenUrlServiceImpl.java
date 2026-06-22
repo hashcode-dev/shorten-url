@@ -1,6 +1,7 @@
 package com.hashcode.shortenurl.service.impl;
 
 import com.hashcode.shortenurl.model.DeviceInfo;
+import com.hashcode.shortenurl.model.LinkListItem;
 import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.repository.ShortenUrlMongoRepository;
 import com.hashcode.shortenurl.service.GeoIpService;
@@ -93,9 +94,8 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
         ShortenUrl shortenUrl = shortenUrlMongoRepository
                 .findById(shortUrl)
                 .orElseThrow(() -> new RuntimeException("Short URL not found"));
-
+        // increment click count
         shortenUrl.setClickCount(shortenUrl.getClickCount() + 1);
-
 
         // set active
         shortenUrl.setActive(true);
@@ -103,31 +103,8 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
         // last clicked time
         shortenUrl.setLastClickedAt(LocalDateTime.now());
 
-        // device
-        String userAgent = request.getHeader("User-Agent");
-
-        if (userAgent != null && userAgent.contains("Mobile")) {
-            shortenUrl.setDevice("Mobile");
-        } else {
-            shortenUrl.setDevice("Desktop");
-        }
-
-        // country
-        shortenUrl.setCountry("India");
 
         // ip tracking
-        String ip = getClientIp(request);
-
-        Map<String, Integer> ipMap = shortenUrl.getIpAddressMap();
-
-        if (ipMap == null) {
-            ipMap = new HashMap<>();
-        }
-
-        ipMap.put(ip, ipMap.getOrDefault(ip, 0) + 1);
-
-        shortenUrl.setIpAddressMap(ipMap);
-
         String clientIp = getClientIp(request);
 
         if (shortenUrl.getIpAddressMap() == null) {
@@ -179,5 +156,24 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
 
         return getShortenUrlMongoRepository()
                 .findAll();
+    }
+
+    @Override
+    public List<LinkListItem> getLinks() {
+
+        return shortenUrlMongoRepository.findAll().stream().map(url -> {
+
+            LinkListItem linkListItem = new LinkListItem();
+
+            linkListItem.setShortUrl(url.getShortUrl());
+            linkListItem.setOriginalUrl(url.getOriginalUrl());
+            linkListItem.setClickCount(url.getClickCount());
+            linkListItem.setCreatedAt(url.getCreatedAt());
+            linkListItem.setActive(url.isActive());
+
+            return linkListItem;
+        }).toList();
+
+
     }
 }
