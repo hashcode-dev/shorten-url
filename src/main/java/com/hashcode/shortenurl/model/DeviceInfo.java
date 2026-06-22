@@ -17,7 +17,6 @@ public class DeviceInfo {
     private String browser;
     private String ipAddress;
     private String country;
-    private String countryCode;
     private LocalDateTime accessedAt;
 }
 

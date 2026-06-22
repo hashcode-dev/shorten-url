@@ -1,5 +1,6 @@
 package com.hashcode.shortenurl.controller;
 
+import com.hashcode.shortenurl.model.LinkListItem;
 import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.service.ShortenUrlService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -97,5 +98,10 @@ public class ShortenUrlController {
         getLogger().info("Getting all short url");
         List<ShortenUrl> shortenUrlList = getShortenUrlService().getAllShortUrls();
         return new ResponseEntity<>(shortenUrlList, HttpStatus.OK);
+    }
+
+    @GetMapping("/links")
+    public ResponseEntity<List<LinkListItem>> getLinks() {
+    return ResponseEntity.ok(shortenUrlService.getLinks());
     }
 }

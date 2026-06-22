@@ -1,6 +1,7 @@
 package com.hashcode.shortenurl.service.impl;
 
 import com.hashcode.shortenurl.model.DeviceInfo;
+import com.hashcode.shortenurl.model.LinkListItem;
 import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.repository.ShortenUrlMongoRepository;
 import com.hashcode.shortenurl.service.GeoIpService;
@@ -155,5 +156,24 @@ public class ShortenUrlServiceImpl implements ShortenUrlService {
 
         return getShortenUrlMongoRepository()
                 .findAll();
+    }
+
+    @Override
+    public List<LinkListItem> getLinks() {
+
+        return shortenUrlMongoRepository.findAll().stream().map(url -> {
+
+            LinkListItem linkListItem = new LinkListItem();
+
+            linkListItem.setShortUrl(url.getShortUrl());
+            linkListItem.setOriginalUrl(url.getOriginalUrl());
+            linkListItem.setClickCount(url.getClickCount());
+            linkListItem.setCreatedAt(url.getCreatedAt());
+            linkListItem.setActive(url.isActive());
+
+            return linkListItem;
+        }).toList();
+
+
     }
 }
