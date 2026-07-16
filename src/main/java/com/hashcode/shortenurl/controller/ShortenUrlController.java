@@ -1,5 +1,6 @@
 package com.hashcode.shortenurl.controller;
 
+import com.hashcode.shortenurl.model.LinkListItem;
 import com.hashcode.shortenurl.model.ShortenUrl;
 import com.hashcode.shortenurl.service.ShortenUrlService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +25,7 @@ public class ShortenUrlController {
     private final ShortenUrlService shortenUrlService;
     private final HttpServletRequest request;
 
-    private Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);
+    private final Logger  logger = LoggerFactory.getLogger(ShortenUrlController.class);
 
     public ShortenUrlController(ShortenUrlService shortenUrlService, HttpServletRequest request) {
         this.shortenUrlService = shortenUrlService;
@@ -39,7 +40,7 @@ public class ShortenUrlController {
         return new ResponseEntity<>(shortUrl, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{shortUrl}")
+    @GetMapping("/r/{shortUrl}")
     public ResponseEntity<String> redirect(@PathVariable("shortUrl") String shortUrl) {
         getLogger().info("Redirecting URL: [{}]", shortUrl);
         ShortenUrl url = getShortenUrlService().redirect(shortUrl, getRequest());
@@ -48,9 +49,9 @@ public class ShortenUrlController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Short URL not found");
         }
-        // Validate the original URL
+
         try {
-            URI uri = new URL(url.getOriginalUrl()).toURI(); // Ensures the URL is valid
+            URI uri = new URL(url.getOriginalUrl()).toURI();
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", String.valueOf(uri))
                     .build();
@@ -60,11 +61,22 @@ public class ShortenUrlController {
         }
     }
 
-    @GetMapping("/analytics/{shortUrl}")
-    public ResponseEntity<ShortenUrl> getAnalytics(@PathVariable String shortUrl) {
-        getLogger().info("Getting Analytics: [{}]", shortUrl);
-        ShortenUrl url = getShortenUrlService().getAnalytics(shortUrl);
-        return new ResponseEntity<>(url, HttpStatus.OK);
+    @GetMapping("/copy/{shortUrl}")
+    public ResponseEntity<String> copyShortUrl(@PathVariable String shortUrl) {
+        getLogger().info("Copying URL: [{}]", shortUrl);
+        return ResponseEntity.ok("http://localhost:8080/r/" + shortUrl);
+    }
+
+    @GetMapping("/share/{shortUrl}")
+    public ResponseEntity<String> shareUrl(@PathVariable String shortUrl) {
+        getLogger().info("Sharing URL: [{}]", shortUrl);
+        return ResponseEntity.ok("http://localhost:8080/r/" + shortUrl);
+    }
+
+    @GetMapping("/qr/{shortUrl}")
+    public ResponseEntity<String> generateQr(@PathVariable String shortUrl) {
+        getLogger().info("Generating QR: [{}]", shortUrl);
+        return ResponseEntity.ok("QR Generated For: " + shortUrl);
     }
 
     @GetMapping("/analytics/{shortUrl}/countries")
@@ -86,5 +98,10 @@ public class ShortenUrlController {
         getLogger().info("Getting all short url");
         List<ShortenUrl> shortenUrlList = getShortenUrlService().getAllShortUrls();
         return new ResponseEntity<>(shortenUrlList, HttpStatus.OK);
+    }
+
+    @GetMapping("/links")
+    public ResponseEntity<List<LinkListItem>> getLinks() {
+    return ResponseEntity.ok(shortenUrlService.getLinks());
     }
 }
