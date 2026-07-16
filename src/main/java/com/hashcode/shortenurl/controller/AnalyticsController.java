@@ -22,8 +22,6 @@ public class AnalyticsController {
     public ResponseEntity<LinkAnalytics> getAnalytics(
             @PathVariable String shortUrl) {
 
-        return ResponseEntity.ok(
-                getAnalyticsService().getAnalytics(shortUrl)
-        );
+        return ResponseEntity.ok(getAnalyticsService().getAnalytics(shortUrl));
     }
 }

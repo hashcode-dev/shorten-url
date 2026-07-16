@@ -2,12 +2,14 @@ package com.hashcode.shortenurl.controller;
 
 import com.hashcode.shortenurl.model.DashboardAnalytics;
 import com.hashcode.shortenurl.service.DashboardService;
+import lombok.Getter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/dashboard")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Getter
 public class DashboardController {
 
     private final DashboardService dashboardService;
@@ -20,7 +22,7 @@ public class DashboardController {
     public ResponseEntity<DashboardAnalytics> getDashboardSummary() {
 
         return ResponseEntity.ok(
-                dashboardService.getDashboardData()
+                getDashboardService().getDashboardData()
         );
     }
 }

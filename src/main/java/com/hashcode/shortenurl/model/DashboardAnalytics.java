@@ -9,7 +9,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DashboardAnalytics{
+public class DashboardAnalytics {
 
     private long totalLinksCreated;
     private long totalClicksToday;
