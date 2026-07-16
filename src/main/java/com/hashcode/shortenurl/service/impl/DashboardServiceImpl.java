@@ -37,23 +37,16 @@ public class DashboardServiceImpl implements DashboardService {
         Map<String, Integer> clicksByDevice = new HashMap<>();
         Map<String, Integer> clicksByCountry = new HashMap<>();
 
-        for(ShortenUrl url : allUrls){
-
-            if (url.getDeviceInfoList() != null){
-
+        for (ShortenUrl url : allUrls) {
+            if (url.getDeviceInfoList() != null) {
                 url.getDeviceInfoList().forEach(deviceInfo -> {
-
                     String device = deviceInfo.getDeviceType() != null ? deviceInfo.getDeviceType() : "Unknown";
-
-                    clicksByDevice.put(device, clicksByDevice.getOrDefault(device, 0)+1);
-
+                    clicksByDevice.put(device, clicksByDevice.getOrDefault(device, 0) + 1);
                     String country = deviceInfo.getCountry() != null ? deviceInfo.getCountry() : "Unknown";
-
-                    clicksByCountry.put(country, clicksByCountry.getOrDefault(country, 0)+1);
+                    clicksByCountry.put(country, clicksByCountry.getOrDefault(country, 0) + 1);
                 });
             }
         }
-
         return new DashboardAnalytics(totalLinksCreated, totalClicksToday, allTimeClicks, activeLinks, topPerformingLinks, clicksByDevice, clicksByCountry);
     }
 }

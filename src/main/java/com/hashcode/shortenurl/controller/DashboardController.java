@@ -21,8 +21,6 @@ public class DashboardController {
     @GetMapping("/summary")
     public ResponseEntity<DashboardAnalytics> getDashboardSummary() {
 
-        return ResponseEntity.ok(
-                getDashboardService().getDashboardData()
-        );
+        return ResponseEntity.ok(getDashboardService().getDashboardData());
     }
 }
