@@ -10,7 +10,6 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DashboardAnalytics {
-
     private long totalLinksCreated;
     private long totalClicksToday;
     private long allTimeClicks;
